@@ -1,17 +1,26 @@
 <template>
-  <div class="drawer-side z-40">
-    <label for="main-drawer" class="drawer-overlay"></label>
-    <ul class="menu p-4 w-20 hover:w-64 transition-all duration-300 ease-in-out min-h-full bg-base-200 text-base-content border-r overflow-hidden group">
-      <li v-for="item in menuItems" :key="item.path">
-        <router-link :to="item.path" class="flex items-center gap-4 py-3">
-          <component :is="item.icon" :size="24" />
-          <span class="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            {{ item.name }}
-          </span>
-        </router-link>
-      </li>
-    </ul>
-  </div>
+    <div class="drawer-side is-drawer-close:overflow-visible">
+        <label for="my-drawer-4" aria-label="close sidebar" class="drawer-overlay"></label>
+        <div class="flex min-h-full flex-col items-start bg-base-200 is-drawer-close:w-14 is-drawer-open:w-64">
+        <!-- Sidebar content here -->
+        <ul class="menu w-full grow">
+            <!-- List item -->
+            <li v-for="item in menuItems" :key="item.name">
+                <button 
+                    class="is-drawer-close:tooltip is-drawer-close:tooltip-right" 
+                    :data-tip="item.name"
+                >
+                    <component 
+                    :is="item.icon" 
+                    class="my-1.5 inline-block size-4" 
+                    />
+                    
+                    <span class="is-drawer-close:hidden">{{ item.name }}</span>
+                </button>
+            </li>
+        </ul>
+        </div>
+    </div>
 </template>
 
 <script setup>
