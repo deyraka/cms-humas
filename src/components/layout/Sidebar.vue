@@ -24,10 +24,11 @@
 </template>
 
 <script setup>
-import { CalendarCheck, FileText, Settings, Users } from 'lucide-vue-next';
+import { House, CalendarCheck, FileText, Settings, Users } from 'lucide-vue-next';
 
 const menuItems = [
-  { name: 'Calendar', path: '/', icon: CalendarCheck },
+  { name: 'Home', path: '/', icon: House },
+  { name: 'Calendar', path: '/calendar', icon: CalendarCheck },
   { name: 'Draft Konten', path: '/content', icon: FileText },
   { name: 'Manajemen User', path: '/users', icon: Users },
   { name: 'Pengaturan', path: '/settings', icon: Settings },
