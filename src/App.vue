@@ -6,10 +6,17 @@
         <Navbar />
       </header>
 
-      <main class="p-4">
-        <!-- <Navbar /> -->
-        <Breadcrumb class="w-full text-xs"/>
-        <router-view />
+      <main class="p-4 flex flex-col min-h-screen">
+        <!-- <Breadcrumb /> -->
+        <Breadcrumb class="w-full text-xs mb-4"/>
+        <!-- main content render here -->
+        <div class="card w-full bg-base-100 card-xl shadow-sm mb-4 flex-1">
+          <div class="card-body">
+            <router-view />
+          </div>
+        </div>
+        <!-- Footer -->
+        <Footer />
       </main>
     </div>
     <Sidebar />
@@ -17,10 +24,11 @@
 </template>
 
 <script setup>
-import { PanelLeftOpen, LogIn, Search } from 'lucide-vue-next';
+import { Heart, PanelLeftOpen, LogIn, Search } from 'lucide-vue-next';
 import Breadcrumb from './components/layout/Breadcrumb.vue';
 import Navbar from './components/layout/Navbar.vue';
 import Sidebar from './components/layout/Sidebar.vue';
+import Footer from './components/layout/Footer.vue';
 // import { useAuthStore } from './stores/auth'; // Contoh store Pinia
 
 // Commented out because `useAuthStore` is not imported in this file

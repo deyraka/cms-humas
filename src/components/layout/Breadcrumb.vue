@@ -1,5 +1,5 @@
 <template>
-    <div class="card w-96 bg-base-100 card-xs shadow-sm">
+    <div class="card bg-base-100 card-xs shadow-sm">
         <div class="card-body items-center text-center">
             <div class="breadcrumbs text-sm">
                 <ul>
