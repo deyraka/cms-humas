@@ -22,7 +22,7 @@
     <div class="flex items-center gap-1">
       
       <div :data-tip="isDarkMode ? 'Change to day mode' : 'Change to night mode'" 
-            class="tooltip tooltip-bottom tooltip-primary">
+           class="tooltip tooltip-bottom tooltip-primary">
         <label class="swap swap-rotate btn btn-ghost btn-circle btn-sm md:btn-md">
           <input type="checkbox" class="theme-controller" value="synthwave" @change="isDarkMode = !isDarkMode" />
           <Sun class="swap-off w-5 h-5 md:w-6 md:h-6 fill-current"/>
@@ -44,16 +44,18 @@
     </div>
   </div>
 
-  <LoginForm />
+  <LoginForm @login-success="handleLoginSuccess" />
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import { Sun, Moon, PanelLeftOpen, LogIn, LogOut } from 'lucide-vue-next';
-import { useAuthStore } from '@/stores'; 
-import LoginForm from '../LoginForm.vue'; // Pastikan path benar
+import { useAuthStore } from '@/stores'; // Pastikan path store sudah benar
+import LoginForm from '../LoginForm.vue';
 
+// Inisialisasi Pinia Store
 const authStore = useAuthStore();
+
 const isDarkMode = ref(false);
 
 // Logic memotong nama untuk mobile
@@ -62,18 +64,21 @@ const getFirstName = (fullName) => {
   return fullName.split(' ')[0];
 };
 
-// Memicu modal daisyUI
 const openLoginModal = () => {
   const modal = document.getElementById('login_modal');
   if (modal) modal.showModal();
 };
 
-// Logout menggunakan action dari Pinia
+const handleLoginSuccess = () => {
+  // Modal ditutup, UI Navbar & Sidebar akan otomatis terupdate via Pinia
+  const modal = document.getElementById('login_modal');
+  if (modal) modal.close();
+};
+
 const handleLogout = () => {
   if (confirm('Apakah Anda yakin ingin keluar?')) {
     authStore.logout();
-    // Secara otomatis router-guard di router/index.js akan bekerja 
-    // jika user sedang di halaman terproteksi
+    // Semua komponen yang memakai authStore akan langsung sinkron ke state guest
   }
 };
 </script>

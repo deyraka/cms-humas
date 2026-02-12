@@ -73,35 +73,69 @@ function saveContentPlan(formData) {
  * Mengambil data dari Google Sheet 'Content_Plan'
  * URL Database: https://docs.google.com/spreadsheets/d/1B2tyfau0H71XjkZoc3t9Af5zCImr2SRug4CcklhkkaM/edit
  */
+// function getContentPlanData() {
+//   const ss = SpreadsheetApp.getActiveSpreadsheet();
+//   const sheet = ss.getSheetByName('Content_Plan');
+//   if (!sheet) return [];
+  
+//   const data = sheet.getDataRange().getValues();
+//   if (data.length < 2) return [];
+  
+//   const headers = data[0].map(h => h.toString().trim());
+//   const rows = data.slice(1);
+  
+//   return rows.map((row, index) => {
+//     let obj = { id: index };
+//     headers.forEach((header, i) => {
+//       let value = row[i];
+      
+//       // Handle formatting Date & Time dari Sheet
+//       if (value instanceof Date) {
+//         if (header.toLowerCase().includes('jam')) {
+//           obj[header] = Utilities.formatDate(value, Session.getScriptTimeZone(), "HH:mm");
+//         } else {
+//           obj[header] = Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd");
+//         }
+//       } else {
+//         obj[header] = value;
+//       }
+//     });
+//     return obj;
+//   });
+// }
 function getContentPlanData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Content_Plan');
-  if (!sheet) return [];
+  if (!sheet) return JSON.stringify([]);
   
   const data = sheet.getDataRange().getValues();
-  if (data.length < 2) return [];
+  if (data.length < 2) return JSON.stringify([]);
   
   const headers = data[0].map(h => h.toString().trim());
   const rows = data.slice(1);
   
-  return rows.map((row, index) => {
-    let obj = { id: index };
+  const results = rows.map((row, index) => {
+    // Gunakan 'ID' (Uppercase) agar sinkron dengan template Vue
+    let obj = { ID: index + 1 }; 
     headers.forEach((header, i) => {
       let value = row[i];
       
-      // Handle formatting Date & Time dari Sheet
       if (value instanceof Date) {
         if (header.toLowerCase().includes('jam')) {
           obj[header] = Utilities.formatDate(value, Session.getScriptTimeZone(), "HH:mm");
         } else {
+          // Format ISO agar mudah dibaca oleh new Date() di Javascript
           obj[header] = Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd");
         }
       } else {
-        obj[header] = value;
+        // Pastikan nilai kosong menjadi null agar logic v-if di Vue akurat
+        obj[header] = (value === "") ? null : value;
       }
     });
     return obj;
   });
+
+  return JSON.stringify(results); // Mengirim string JSON lebih aman
 }
 
 function authenticateUser(username, pin) {
@@ -126,4 +160,4 @@ function authenticateUser(username, pin) {
     return { Nama: userRow[idxNama], Role: userRow[idxRole] };
   }
   return null;
-}test
+}
