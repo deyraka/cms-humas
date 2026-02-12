@@ -161,3 +161,48 @@ function authenticateUser(username, pin) {
   }
   return null;
 }
+
+/**
+ * Mengambil konfigurasi status dari sheet Metadata_Status
+ * Diperbaiki dengan filter untuk membuang baris kosong yang terdeteksi
+ */
+function getStatusSettings() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('Metadata_Status');
+    
+    if (!sheet) {
+      throw new Error("Sheet 'Metadata_Status' tidak ditemukan!");
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return JSON.stringify([]);
+
+    const lastColumn = sheet.getLastColumn();
+    const data = sheet.getRange(1, 1, lastRow, lastColumn).getValues();
+    
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    // Filter dan Map data
+    const statusSettings = rows
+      .filter(row => row[headers.indexOf('Status_Name')] !== "") // HANYA ambil baris yang Status_Name-nya tidak kosong
+      .map(row => {
+        let obj = {};
+        headers.forEach((header, index) => {
+          obj[header] = row[index];
+        });
+        return obj;
+      });
+
+    // Urutkan berdasarkan Sort_Priority (Ascending)
+    statusSettings.sort((a, b) => (Number(a.Sort_Priority) || 0) - (Number(b.Sort_Priority) || 0));
+
+    console.log("Total data ditemukan:", statusSettings.length + "\n" + JSON.stringify(statusSettings));
+    return JSON.stringify(statusSettings); 
+    
+  } catch (error) {
+    console.error("Error in getStatusSettings:", error.message);
+    return JSON.stringify({ error: error.message });
+  }
+}

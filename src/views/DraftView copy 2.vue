@@ -46,9 +46,7 @@
             
             <select v-else v-model="filterStatus" class="select select-bordered select-sm w-full bg-base-100">
               <option value="all">Semua Status</option>
-              <template v-if="statusStore.options && statusStore.options.length > 0">
-                <option v-for="s in statusStore.options" :key="s" :value="s">{{ s }}</option>
-              </template>
+              <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
             </select>
           </div>
         </div>
@@ -77,7 +75,7 @@
           </thead>
           
           <tbody class="divide-y divide-base-300">
-            <template v-if="isPageLoading">
+            <template v-if="isLoading">
               <tr v-for="i in 5" :key="i">
                 <td colspan="5" class="p-4 bg-base-100">
                   <div class="skeleton h-10 w-full rounded-md opacity-50"></div>
@@ -125,7 +123,7 @@
                     <div 
                       :class="[
                         'badge text-[9px] md:text-xs font-bold border-none h-5 px-2 capitalize cursor-help w-16 md:w-24 flex justify-center', 
-                        statusStore.getConfig(item.Status).Badge_Class
+                        getStatusClass(item.Status)
                       ]"
                     >
                       <span class="truncate">{{ item.Status }}</span>
@@ -154,26 +152,15 @@
       </div>
     </div>
   </div>
-  <!-- SAFELIST UNTUK STATUS DARI DATABASE 
-  Tailwind v4 akan memindai komentar ini dan menyertakan class-nya ke dalam build. -->
-  <!-- <div class="hidden" aria-hidden="true">
-  <div class="badge-ghost badge-error badge-primary badge-secondary badge-warning badge-accent badge-success badge-info badge-neutral"></div>
-  <div class="bg-base-300 bg-error/10 bg-primary/10 bg-secondary/10 bg-warning/10 bg-accent/10 bg-success/10 bg-info/10 bg-neutral/10"></div>
-  <div class="bg-warning/20 bg-warning/5 bg-warning/60 bg-error/20 bg-error/5 bg-error/60"></div>
-  <div class="text-warning-content text-error-content border-warning/30 border-error/30"></div>
-  </div> -->
-  <!-- end of Safety -->
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { Plus, Search, Filter, Pencil, SearchX, ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-vue-next';
 import { useAuthStore } from '@/stores'; // Impor store untuk integrasi auth
-import { useMetadataStatusStore } from '@/stores/metadataStatus';
 
 // --- State ---
 const authStore = useAuthStore();
-const statusStore = useMetadataStatusStore(); 
 const isLoading = ref(true);
 const showExtraFilter = ref(false);
 const searchQuery = ref('');
@@ -352,20 +339,7 @@ watch(() => authStore.isLoggedIn, () => {
   loadData();
 });
 
-// onMounted(() => {
-//   loadData();
-// });
-
-// Update pada logic isLoading agar mempertimbangkan store metadata
-const isPageLoading = computed(() => {
-  return isLoading.value || statusStore.isLoading;
-});
-
-onMounted(async () => {
-  // Pastikan metadata sudah terambil sebelum menjalankan loadData
-  if (!statusStore.isLoaded) {
-    await statusStore.fetchSettings();
-  }
-  await loadData();
+onMounted(() => {
+  loadData();
 });
 </script>

@@ -25,7 +25,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useAuthStore } from '@/stores'; 
-import { House, CalendarCheck, FileText, Settings, Users } from 'lucide-vue-next';
+import { ChartSpline, House, CalendarCheck, FileText, Settings, Users } from 'lucide-vue-next';
 
 const authStore = useAuthStore();
 
@@ -36,8 +36,8 @@ const authStore = useAuthStore();
  * - Role spesifik: Hanya muncul jika role user sesuai di GAS
  */
 const menuItems = [
-  { name: 'Home', path: '/home', icon: House, roles: ['any'] },
-  { name: 'Calendar', path: '/', icon: CalendarCheck, roles: ['any'] },
+  { name: 'Dashboard', path: '/dashboard', icon: ChartSpline, roles: ['any'] },
+  { name: 'Home', path: '/', icon: House, roles: ['any'] },
   { 
     name: 'Draft Konten', 
     path: '/draft', 

@@ -37,13 +37,13 @@ const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/home',
-      name: 'home',
+      path: '/dashboard',
+      name: 'dashboard',
       component: HomeView,
     },
     {
       path: '/',   // sementara kita langsung ke calendar aja dulu
-      name: 'calendar',
+      name: 'home',
       component: () => import('../views/CalendarView.vue'),
     },
     {

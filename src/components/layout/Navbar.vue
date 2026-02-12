@@ -24,7 +24,7 @@
       <div :data-tip="isDarkMode ? 'Change to day mode' : 'Change to night mode'" 
             class="tooltip tooltip-bottom tooltip-primary">
         <label class="swap swap-rotate btn btn-ghost btn-circle btn-sm md:btn-md">
-          <input type="checkbox" class="theme-controller" value="synthwave" @change="isDarkMode = !isDarkMode" />
+          <input type="checkbox" class="theme-controller" value="night" @change="isDarkMode = !isDarkMode" />
           <Sun class="swap-off w-5 h-5 md:w-6 md:h-6 fill-current"/>
           <Moon class="swap-on h-5 w-5 fill-current"/>
         </label>

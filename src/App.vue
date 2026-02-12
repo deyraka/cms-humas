@@ -29,10 +29,15 @@ import Breadcrumb from './components/layout/Breadcrumb.vue';
 import Navbar from './components/layout/Navbar.vue';
 import Sidebar from './components/layout/Sidebar.vue';
 import Footer from './components/layout/Footer.vue';
-// import { useAuthStore } from './stores/auth'; // Contoh store Pinia
+import { useMetadataStatusStore } from '@/stores/metadataStatus';
+import { onMounted } from 'vue';
 
-// Commented out because `useAuthStore` is not imported in this file
-// const authStore = useAuthStore();
+const statusStore = useMetadataStatusStore();
+
+onMounted(() => {
+  // Load semua metadata status di awal aplikasi
+  statusStore.fetchSettings();
+});
 </script>
 
 <style>

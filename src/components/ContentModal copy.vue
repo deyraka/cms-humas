@@ -2,10 +2,7 @@
   <dialog id="content_detail_modal" class="modal modal-bottom sm:modal-middle">
     <div v-if="content" class="modal-box bg-base-100 border border-base-300 p-0 overflow-hidden max-w-lg flex flex-col max-h-[90vh]">
       
-      <div 
-        class="p-4 flex justify-between items-start border-b border-base-300 shrink-0 transition-colors duration-300" 
-        :class="statusStore.getConfig(content.Status).Bg_Class"
-      >
+      <div class="p-4 flex justify-between items-start border-b border-base-300 shrink-0" :class="getStatusBg(content.Status)">
         <div class="flex flex-col">
           <div class="flex items-center gap-2">
             <FileText class="w-4 h-4" />
@@ -23,17 +20,14 @@
           <h2 class="text-lg font-extrabold text-base-content leading-tight">
             {{ content.Judul_Cover }}
           </h2>
-          <div 
-            class="badge badge-sm mt-1.5 font-bold uppercase text-[9px] py-2" 
-            :class="statusStore.getConfig(content.Status).Badge_Class"
-          >
+          <div class="badge badge-sm mt-1.5 font-bold uppercase text-[9px]" :class="getStatusBadge(content.Status)">
             status : {{ content.Status }}
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div class="flex items-center gap-2 bg-base-200 p-2.5 rounded-xl">
-            <CalendarIcon class="w-4 h-4 text-primary shrink-0" />
+            <Calendar class="w-4 h-4 text-primary shrink-0" />
             <div class="min-w-0">
               <p class="text-[9px] uppercase font-bold opacity-50 leading-none mb-1">Tanggal</p>
               <p class="text-[11px] font-semibold truncate">{{ formatDate(content.Tanggal_Rilis) }}</p>
@@ -81,31 +75,48 @@
 </template>
 
 <script setup>
-import { FileText, Calendar as CalendarIcon, Clock, Link as LinkIcon, ExternalLink } from 'lucide-vue-next';
-import { useAuthStore } from '@/stores';
-import { useMetadataStatusStore } from '@/stores/metadataStatus'; // Import store metadata
+import { FileText, Calendar, Clock, Link as LinkIcon, ExternalLink } from 'lucide-vue-next';
+import { useAuthStore } from '@/stores'; // Integrasi: Impor store Pinia
 
 defineProps(['content']);
-const authStore = useAuthStore();
-const statusStore = useMetadataStatusStore(); // Inisialisasi store metadata
+const authStore = useAuthStore(); // Integrasi: Inisialisasi store
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
 };
 
-/** * Fungsi getStatusBg dan getStatusBadge dihapus. 
- * Sekarang langsung memanggil statusStore.getConfig(status) di template.
- */
+const getStatusBg = (s) => {
+  const status = s?.toLowerCase() || '';
+  if (status === 'published') return 'bg-info/10 text-info';
+  if (status === 'on editing') return 'bg-warning/10 text-warning';
+  if (status === 'content approved') return 'bg-success/10 text-success';
+  return 'bg-base-300 text-base-content/70';
+};
+
+const getStatusBadge = (s) => {
+  const status = s?.toLowerCase() || '';
+  if (status === 'published') return 'badge-info';
+  if (status === 'on editing') return 'badge-warning';
+  if (status === 'content approved') return 'badge-success';
+  return 'badge-ghost';
+};
 </script>
 
 <style scoped>
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { 
-  background: hsl(var(--bc) / 0.2); 
-  border-radius: 10px; 
+/* Styling scrollbar agar lebih halus dan tipis */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: hsl(var(--bc) / 0.3); }
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--bc) / 0.2);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--bc) / 0.3);
+}
 </style>

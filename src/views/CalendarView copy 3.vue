@@ -48,6 +48,7 @@
       </div>
 
       <div class="bg-base-300 md:rounded-xl shadow-xl overflow-hidden border border-base-300 w-auto -mx-8 md:mx-0 rounded-lg">
+        
         <div v-if="!(isMobile && viewMode === 'weekly')" class="grid grid-cols-7 bg-neutral text-neutral-content font-bold text-center py-3 text-xs md:text-sm">
           <div v-for="day in weekDays" :key="day">{{ isMobile ? day.substring(0,3) : day }}</div>
         </div>
@@ -56,7 +57,7 @@
           viewMode === 'monthly' ? 'grid grid-cols-7' : (isMobile ? 'flex flex-col gap-[1px]' : 'grid grid-cols-7'),
           'bg-base-300 gap-[1px]'
         ]">
-          <template v-if="isPageLoading">
+          <template v-if="isLoading">
             <div v-for="n in (viewMode === 'monthly' ? 42 : 7)" :key="'skeleton-'+n" 
                 class="min-h-[120px] p-2 bg-base-100 flex flex-col gap-2">
               <div class="skeleton h-4 w-8"></div>
@@ -82,7 +83,12 @@
                   {{ cell.dayNumber }} 
                   <span v-if="isMobile && viewMode === 'weekly'">{{ months[cell.date.getMonth()] }}</span>
                 </span>
-                <button v-if="canAddContent" @click="addItem(cell.date)" class="btn btn-ghost btn-xs btn-circle text-primary hover:bg-primary/10 transition-all">
+                <button 
+                  v-if="canAddContent" 
+                  @click="addItem(cell.date)" 
+                  class="btn btn-ghost btn-xs btn-circle text-primary hover:bg-primary/10 transition-all"
+                  title="Tambah Konten"
+                >
                   <Plus :size="16" />
                 </button>         
               </div>
@@ -91,11 +97,8 @@
                 <template v-if="spillDetail">
                   <div v-for="content in getContents(cell.dateKey)" :key="content.ID"
                       @click="showDetail(content)"
-                      class="cursor-pointer hover:scale-[1.02] active:scale-95 text-[10px] p-1.5 rounded border leading-tight transition-all flex items-center shadow-sm w-full overflow-hidden"
-                      :class="[
-                        statusStore.getConfig(content.Status).Bg_Class,
-                        'border-base-300/30'
-                      ]">
+                        class="cursor-pointer hover:scale-[1.02] active:scale-95 text-[10px] p-1.5 rounded border leading-tight transition-all flex items-center shadow-sm w-full overflow-hidden"
+                      :class="getStatusBadgeClass(content.Status)">
                     <div class="truncate whitespace-nowrap w-full">
                       <span class="font-black mr-1 uppercase text-[9px]">{{ content.Jam_Rilis }}</span>
                       <span class="opacity-70">[{{ content.Rubrikasi }}]</span> {{ content.Judul_Cover }}
@@ -107,8 +110,8 @@
                   <div class="flex flex-wrap gap-1.5 mt-auto pb-1 px-1">
                     <div v-for="content in getContents(cell.dateKey)" :key="content.ID"
                         @click="showDetail(content)"
-                        class="cursor-pointer hover:scale-125 w-2.5 h-2.5 rounded-full ring-1 ring-base-100 shadow-sm"
-                        :class="statusStore.getConfig(content.Status).Dot_Class">
+                          class="cursor-pointer hover:scale-125 w-2.5 h-2.5 rounded-full ring-1 ring-base-100 shadow-sm"
+                        :class="getStatusColor(content.Status)">
                     </div>
                   </div>
                 </template>
@@ -128,18 +131,13 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { useAuthStore } from '@/stores';
-import { useMetadataStatusStore } from '@/stores/metadataStatus'; // Import
 import ContentModal from '../components/ContentModal.vue';
 
 // --- Pinia & State ---
 const authStore = useAuthStore();
-const statusStore = useMetadataStatusStore(); // Inisialisasi
 const isLoading = ref(true);
 const contentData = ref([]); 
 const selectedContent = ref(null);
-
-// Safety Loading
-const isPageLoading = computed(() => isLoading.value || statusStore.isLoading);
 
 const weekDays = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -151,13 +149,57 @@ const viewMode = ref('monthly');
 const spillDetail = ref(true);
 const isMobile = ref(false);
 
-// --- 1. Logic Loading Data ---
+// --- 1. Mockup Backend GAS ---
+const fetchContentFromGAS = () => {
+  return new Promise((resolve) => {
+    // Data dummy lengkap untuk simulasi
+    const dummyData = [
+      { 
+        ID: "CONT-001", 
+        Tanggal_Rilis: new Date().toISOString(), 
+        Jam_Rilis: '09:00', 
+        Status: 'published', 
+        Rubrikasi: 'News', 
+        Judul_Cover: 'Peluncuran Fitur Baru website BPS Kalimantan Tengah tahun 2026 yang sudah berbasis Artificial Intelligence dan Agentic AI.',
+        Referensi: 'https://google.com',
+        Link_Hasil: 'https://kalteng.go.id'
+      },
+      { 
+        ID: "CONT-002", 
+        Tanggal_Rilis: new Date().toISOString(), 
+        Jam_Rilis: '14:30', 
+        Status: 'on editing', 
+        Rubrikasi: 'Social', 
+        Judul_Cover: 'Konten Edukasi Mingguan',
+        Referensi: 'https://instagram.com',
+        Link_Hasil: ''
+      },
+      { 
+        ID: "CONT-003", 
+        Tanggal_Rilis: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(), 
+        Jam_Rilis: '10:00', 
+        Status: 'draft', 
+        Rubrikasi: 'Ads', 
+        Judul_Cover: 'Campaign Ramadhan',
+        Referensi: '',
+        Link_Hasil: ''
+      }
+    ];
+    setTimeout(() => resolve(dummyData), 1200); // Simulasi delay
+  });
+};
+
+// --- 2. Logic Loading Data ---
 const loadData = async () => {
   isLoading.value = true;
+  
+  // --- MODE PRODUKSI (GOOGLE APPS SCRIPT) ---
+  // Silakan uncomment bagian ini saat akan dideploy ke GAS
   
   if (typeof google !== 'undefined') {
     google.script.run
       .withSuccessHandler((data) => {
+        // Data yang dikirim dari GAS harus dalam format JSON string atau Array/Object
         contentData.value = typeof data === 'string' ? JSON.parse(data) : data;
         isLoading.value = false;
       })
@@ -165,27 +207,36 @@ const loadData = async () => {
         console.error("GAS Error:", error);
         isLoading.value = false;
       })
-      .getContentPlanData();
+      .getContentPlanData(); // Memanggil fungsi di Code.gs
     return;
   }
 
-  // LOKAL DEV
+  // --- MODE DEVELOPMENT (LOKAL) ---
   try {
-    await new Promise(r => setTimeout(r, 1000));
-    contentData.value = [
-      { ID: "D1", Tanggal_Rilis: new Date().toISOString(), Jam_Rilis: '09:00', Status: 'published', Rubrikasi: 'News', Judul_Cover: 'AI Implementasi' },
-      { ID: "D2", Tanggal_Rilis: new Date().toISOString(), Jam_Rilis: '14:30', Status: 'on editing', Rubrikasi: 'Social', Judul_Cover: 'Edukasi BPS' }
-    ];
+    const data = await fetchContentFromGAS();
+    contentData.value = data;
+  } catch (error) {
+    console.error("Local Fetch error:", error);
   } finally {
     isLoading.value = false;
   }
 };
 
-// --- 2. Helper Integrasi Status Store ---
-// Fungsi manual lama dihapus (getStatusColor & getStatusBadgeClass) 
-// Karena sudah diganti langsung di template menggunakan statusStore.getConfig()
+// --- 3. Modal Logic ---
+async function showDetail(content) {
+  selectedContent.value = content;
+  await nextTick();
+  const modal = document.getElementById('content_detail_modal');
+  if (modal) modal.showModal();
+}
 
-// --- 3. Calendar & Modal Logic ---
+// --- Permissions ---
+const canAddContent = computed(() => {
+  const allowedRoles = ['superadmin', 'konseptor', 'editor', 'statmin', 'kamedsos'];
+  return authStore.isLoggedIn && allowedRoles.includes(authStore.userRole);
+});
+
+// --- Calendar Logic ---
 const calendarCells = computed(() => {
   const year = selectedYear.value;
   const month = selectedMonth.value;
@@ -215,7 +266,9 @@ const calendarCells = computed(() => {
 });
 
 const currentRangeLabel = computed(() => {
-  if (viewMode.value === 'monthly') return `${months[selectedMonth.value]} ${selectedYear.value}`;
+  if (viewMode.value === 'monthly') {
+    return `${months[selectedMonth.value]} ${selectedYear.value}`;
+  }
   const cells = calendarCells.value;
   if (!cells.length) return "";
   const start = cells[0].date;
@@ -223,6 +276,7 @@ const currentRangeLabel = computed(() => {
   return `${start.getDate()} ${months[start.getMonth()].substring(0,3)} - ${end.getDate()} ${months[end.getMonth()].substring(0,3)} ${end.getFullYear()}`;
 });
 
+// --- Helper Functions ---
 function createCell(date, isCurrentMonth) {
   const d = new Date(date);
   return {
@@ -235,24 +289,38 @@ function createCell(date, isCurrentMonth) {
 
 function getContents(dateKey) {
   return contentData.value.filter(item => {
-    if (!item.Tanggal_Rilis) return false;
+    if (!item.Tanggal_Rilis) return false; // Integrasi: Safety check jika Tanggal_Rilis undefined
     const d = new Date(item.Tanggal_Rilis);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     return key === dateKey;
   });
 }
 
-async function showDetail(content) {
-  selectedContent.value = content;
-  await nextTick();
-  const modal = document.getElementById('content_detail_modal');
-  if (modal) modal.showModal();
+function getStatusColor(s) {
+  const status = s?.toLowerCase() || '';
+  const colors = {
+    'draft': 'bg-neutral-content',
+    'on editing': 'bg-warning',
+    'published': 'bg-info',
+    'content approved': 'bg-success'
+  };
+  return colors[status] || 'bg-base-300';
 }
 
-const canAddContent = computed(() => {
-  const allowedRoles = ['superadmin', 'konseptor', 'editor', 'statmin', 'kamedsos'];
-  return authStore.isLoggedIn && allowedRoles.includes(authStore.userRole);
-});
+function getStatusBadgeClass(s) {
+  const status = s?.toLowerCase().trim() || '';
+  const classes = {
+    'draft': 'bg-base-200 text-base-content/70 border-base-300',
+    'on editing': 'bg-warning/10 text-warning border-warning/20',
+    'published': 'bg-info/10 text-info border-info/20',
+    'content approved': 'bg-success/10 text-success border-success/20'
+  };
+  return classes[status] || 'bg-base-200 text-base-content/40 border-base-300';
+}
+
+function isToday(date) {
+  return date.toDateString() === new Date().toDateString();
+}
 
 // --- Navigation ---
 function nextRange() {
@@ -262,7 +330,9 @@ function nextRange() {
   } else {
     if (selectedMonth.value === 11) {
       selectedMonth.value = 0; selectedYear.value++;
-    } else { selectedMonth.value++; }
+    } else {
+      selectedMonth.value++;
+    }
   }
 }
 
@@ -273,7 +343,9 @@ function prevRange() {
   } else {
     if (selectedMonth.value === 0) {
       selectedMonth.value = 11; selectedYear.value--;
-    } else { selectedMonth.value--; }
+    } else {
+      selectedMonth.value--;
+    }
   }
 }
 
@@ -282,7 +354,10 @@ function syncSelectors() {
   selectedYear.value = currentDate.value.getFullYear();
 }
 
-function goToday() { currentDate.value = new Date(); syncSelectors(); }
+function goToday() {
+  currentDate.value = new Date();
+  syncSelectors();
+}
 
 function addItem(date) {
   const title = prompt("Masukkan Judul Konten:");
@@ -291,7 +366,7 @@ function addItem(date) {
       ID: `CONT-${Date.now()}`,
       Tanggal_Rilis: date.toISOString(),
       Jam_Rilis: '12:00',
-      Status: 'Draft',
+      Status: 'draft',
       Rubrikasi: 'General',
       Judul_Cover: title
     });
@@ -306,14 +381,17 @@ watch([selectedMonth, selectedYear], ([newM, newY]) => {
   currentDate.value = d;
 });
 
+// Integrasi: Menambahkan watcher agar data di-refresh otomatis jika status login berubah (misal user logout di halaman kalender)
+watch(() => authStore.isLoggedIn, () => {
+  loadData();
+}); 
+
 let mq;
-onMounted(async () => {
-  // Ambil metadata dulu agar warna tidak blank
-  if (!statusStore.isLoaded) {
-    await statusStore.fetchSettings();
-  }
+onMounted(() => {
+  // Load Data
   loadData();
 
+  // Responsive Handler
   mq = window.matchMedia('(max-width: 768px)');
   const update = (e) => {
     isMobile.value = e.matches;
@@ -326,6 +404,11 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   if (mq) mq.removeEventListener('change', () => {});
 });
-
-function isToday(date) { return date.toDateString() === new Date().toDateString(); }
 </script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar { width: 3px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: hsl(var(--bc) / 0.2); border-radius: 10px; }
+.transition-all { transition: all 0.2s ease-in-out; }
+</style>

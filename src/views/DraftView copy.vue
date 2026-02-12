@@ -46,9 +46,7 @@
             
             <select v-else v-model="filterStatus" class="select select-bordered select-sm w-full bg-base-100">
               <option value="all">Semua Status</option>
-              <template v-if="statusStore.options && statusStore.options.length > 0">
-                <option v-for="s in statusStore.options" :key="s" :value="s">{{ s }}</option>
-              </template>
+              <option v-for="s in statusOptions" :key="s" :value="s">{{ s }}</option>
             </select>
           </div>
         </div>
@@ -77,7 +75,7 @@
           </thead>
           
           <tbody class="divide-y divide-base-300">
-            <template v-if="isPageLoading">
+            <template v-if="isLoading">
               <tr v-for="i in 5" :key="i">
                 <td colspan="5" class="p-4 bg-base-100">
                   <div class="skeleton h-10 w-full rounded-md opacity-50"></div>
@@ -98,37 +96,37 @@
             </template>
 
             <template v-else>
-              <tr v-for="(item, index) in paginatedData" :key="item.ID" class="hover:bg-base-200/50 transition-colors">
+              <tr v-for="(item, index) in paginatedData" :key="item.id" class="hover:bg-base-200/50 transition-colors">
                 <td class="text-center font-medium text-[11px] px-1 text-base-content/50 bg-base-100">
                   {{ (currentPage - 1) * itemsPerPage + index + 1 }}
                 </td>
                 <td class="px-2 py-2.5 bg-base-100">
                   <div class="flex flex-col max-w-[160px] sm:max-w-none">
-                    <span class="text-[9px] text-base-content/40 font-mono">ID: {{ item.ID }}</span>
-                    <span class="text-[10px] font-extrabold text-primary uppercase leading-tight">{{ item.Rubrikasi }}</span>
+                    <span class="text-[9px] text-base-content/40 font-mono">ID: {{ item.id }}</span>
+                    <span class="text-[10px] font-extrabold text-primary uppercase leading-tight">{{ item.rubrikasi }}</span>
                     <span class="text-sm font-bold leading-snug truncate">
-                      {{ item.Judul_Cover }}
+                      {{ item.judul }}
                     </span>
                     <span class="md:hidden text-[10px] text-base-content/50 font-medium mt-0.5">
-                      {{ formatDateLabel(item.Tanggal_Rilis) }} • {{ item.Jam_Rilis }}
+                      {{ formatDateLabel(item.tanggal) }} • {{ item.jam }}
                     </span>
                   </div>
                 </td>
                 <td class="hidden md:table-cell px-4 bg-base-100">
                   <div class="flex flex-col text-sm">
-                    <span class="font-semibold text-base-content/80">{{ formatDateLabel(item.Tanggal_Rilis) }}</span>
-                    <span class="text-xs text-base-content/40">{{ item.Jam_Rilis }} WIB</span>
+                    <span class="font-semibold text-base-content/80">{{ formatDateLabel(item.tanggal) }}</span>
+                    <span class="text-xs text-base-content/40">{{ item.jam }} WIB</span>
                   </div>
                 </td>
                 <td class="px-1 md:px-4 text-center md:text-left bg-base-100">
-                  <div :data-tip="item.Status" class="tooltip tooltip-primary md:tooltip-top">
+                  <div :data-tip="item.status" class="tooltip tooltip-primary md:tooltip-top">
                     <div 
                       :class="[
                         'badge text-[9px] md:text-xs font-bold border-none h-5 px-2 capitalize cursor-help w-16 md:w-24 flex justify-center', 
-                        statusStore.getConfig(item.Status).Badge_Class
+                        getStatusClass(item.status)
                       ]"
                     >
-                      <span class="truncate">{{ item.Status }}</span>
+                      <span class="truncate">{{ item.status }}</span>
                     </div>
                   </div>
                 </td>
@@ -154,192 +152,89 @@
       </div>
     </div>
   </div>
-  <!-- SAFELIST UNTUK STATUS DARI DATABASE 
-  Tailwind v4 akan memindai komentar ini dan menyertakan class-nya ke dalam build. -->
-  <!-- <div class="hidden" aria-hidden="true">
-  <div class="badge-ghost badge-error badge-primary badge-secondary badge-warning badge-accent badge-success badge-info badge-neutral"></div>
-  <div class="bg-base-300 bg-error/10 bg-primary/10 bg-secondary/10 bg-warning/10 bg-accent/10 bg-success/10 bg-info/10 bg-neutral/10"></div>
-  <div class="bg-warning/20 bg-warning/5 bg-warning/60 bg-error/20 bg-error/5 bg-error/60"></div>
-  <div class="text-warning-content text-error-content border-warning/30 border-error/30"></div>
-  </div> -->
-  <!-- end of Safety -->
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { Plus, Search, Filter, Pencil, SearchX, ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-vue-next';
-import { useAuthStore } from '@/stores'; // Impor store untuk integrasi auth
-import { useMetadataStatusStore } from '@/stores/metadataStatus';
 
 // --- State ---
-const authStore = useAuthStore();
-const statusStore = useMetadataStatusStore(); 
 const isLoading = ref(true);
 const showExtraFilter = ref(false);
 const searchQuery = ref('');
 const currentPage = ref(1);
 const itemsPerPage = 10;
-const sortOrder = ref('asc'); // Default terlama ke terbaru untuk list draft
-const contentData = ref([]); // State utama untuk menampung data dari backend
+const sortOrder = ref('asc'); // 'asc' untuk terlama ke terbaru, 'desc' untuk terbaru ke terlama
 
 const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-const statusOptions = ['Draft', 'On Editing', 'Published', 'Content Approved', 'Archived'];
+// --- Perubahan Logic Tahun Dinamis ---
+const years = computed(() => {
+  // Mengambil tahun unik dari dummyDrafts, diurutkan dari yang terbaru
+  const extractedYears = dummyDrafts.value.map(item => item.tanggal.getFullYear());
+  const uniqueYears = [...new Set(extractedYears)].sort((a, b) => b - a);
+  
+  // Memastikan tahun yang sedang dipilih tetap ada di list agar tidak error
+  return uniqueYears;
+});
+const statusOptions = ['Draft', 'Ready to Edit', 'Published', 'Archived'];
 
-// Filter State
 const filterBulan = ref(new Date().getMonth()); 
 const filterTahun = ref(new Date().getFullYear());
 const filterStatus = ref('all');
 
-// --- 1. Hybrid Load Data Mechanism (Standardized with Calendar.vue) ---
-const loadData = async () => {
-  isLoading.value = true;
-  
-  // --- MODE PRODUKSI (GOOGLE APPS SCRIPT) ---
-  if (typeof google !== 'undefined') {
-    google.script.run
-      .withSuccessHandler((data) => {
-        const rawData = typeof data === 'string' ? JSON.parse(data) : data;
-        // Konversi string tanggal dari GAS menjadi objek Date agar filter berfungsi
-        contentData.value = rawData.map(item => ({
-          ...item,
-          Tanggal_Rilis: new Date(item.Tanggal_Rilis)
-        }));
-        isLoading.value = false;
-      })
-      .withFailureHandler((error) => {
-        console.error("GAS Error (Draft):", error);
-        isLoading.value = false;
-      })
-      .getContentPlanData(); // Memanggil fungsi yang sama dengan Calendar
-    return;
-  }
+// --- Dummy Data (Menggunakan objek Date agar filter berfungsi akurat) ---
+const dummyDrafts = ref([
+  { id: 'CNT-001', rubrikasi: 'News', judul: 'Update Harga Bahan Pokok Ramadhan', jam: '09:00', status: 'Draft', tanggal: new Date(2026, 1, 12) }, // Feb
+  { id: 'CNT-002', rubrikasi: 'Lifestyle', judul: 'Tips Kesehatan Musim Hujan', jam: '14:00', status: 'Ready to Edit', tanggal: new Date(2026, 1, 13) },
+  { id: 'CNT-003', rubrikasi: 'Tech', judul: 'Gadget Terkini 2026', jam: '10:00', status: 'Published', tanggal: new Date(2026, 2, 10) }, // Mar
+  ...Array.from({ length: 15 }, (_, i) => ({
+    id: `CNT-0${i + 10}`, 
+    rubrikasi: 'General', 
+    judul: `Konten Dummy Ke-${i + 1}`, 
+    jam: '12:00', 
+    status: 'Draft', 
+    tanggal: new Date(2026, 1, 20) // Feb 2026
+  }))
+]);
 
-  // --- MODE DEVELOPMENT (LOKAL) ---
-  try {
-    const data = await fetchDummyData();
-    contentData.value = data;
-  } catch (error) {
-    console.error("Local Fetch error:", error);
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-// --- 2. Mockup Backend dengan Skema Kolom Lengkap ---
-const fetchDummyData = () => {
-  return new Promise((resolve) => {
-    const fullSchemaData = [
-      { 
-        ID: 'CONT-2026-001',
-        Tanggal_Rilis: new Date(), 
-        Jam_Rilis: '09:00',
-        Pilar: 'Transformasi Digital',
-        Rubrikasi: 'News',
-        Jenis_Media: 'Instagram',
-        Ide_Konten: 'Pemanfaatan AI di lingkup pemerintahan',
-        Referensi: 'https://example.com',
-        Judul_Cover: 'Implementasi Agentic AI 2026',
-        Link_Hasil: 'https://kalteng.go.id',
-        Pj_Editor: 'Budi Darmawan',
-        Status: 'waiting approval',
-        Kamedsos_Approval: true,
-        Kahumas_Approval: true,
-        Kabag_Approval: true,
-        Madya_Approval: true,
-        Kepala_Approval: true,
-        Catatan: 'Segera diposting di semua platform',
-        is_Rescheduled: false
-      },
-      // Loop untuk generate data tambahan
-      ...Array.from({ length: 15 }, (_, i) => ({
-        ID: `CONT-2026-0${i + 10}`,
-        Tanggal_Rilis: new Date(2026, 1, 10 + i), 
-        Jam_Rilis: '10:00',
-        Pilar: 'Sosial',
-        Rubrikasi: 'General',
-        Jenis_Media: 'TikTok',
-        Ide_Konten: `Ide konten dummy ke-${i+1}`,
-        Referensi: '',
-        Judul_Cover: `Judul Konten Dummy ${i+1}`,
-        Link_Hasil: '',
-        Pj_Editor: 'Staf Humas',
-        Status: 'Draft',
-        Kamedsos_Approval: false,
-        Kahumas_Approval: false,
-        Kabag_Approval: false,
-        Madya_Approval: false,
-        Kepala_Approval: false,
-        Catatan: '',
-        is_Rescheduled: i % 5 === 0
-      }))
-    ];
-    setTimeout(() => resolve(fullSchemaData), 1000);
-  });
-};
-
-// --- 3. Logic Filter & Sorting ---
-// Menggunakan data asli dari contentData sesuai kolom database
-const years = computed(() => {
-  if (contentData.value.length === 0) return [new Date().getFullYear()];
-  const extractedYears = contentData.value.map(item => item.Tanggal_Rilis.getFullYear());
-  return [...new Set(extractedYears)].sort((a, b) => b - a);
-});
-
+// --- Logic Perbaikan Filter & Sorting ---
 const filteredData = computed(() => {
-  let results = contentData.value.filter(item => {
-    const d = item.Tanggal_Rilis;
+  // 1. Filter data terlebih dahulu
+  let results = dummyDrafts.value.filter(item => {
+    const d = item.tanggal;
     const matchesMonth = filterBulan.value === 'all' || d.getMonth() === filterBulan.value;
     const matchesYear = d.getFullYear() === filterTahun.value;
-    const matchesStatus = filterStatus.value === 'all' || item.Status.toLowerCase() === filterStatus.value.toLowerCase();
-    
+    const matchesStatus = filterStatus.value === 'all' || item.status === filterStatus.value;
     const query = searchQuery.value.toLowerCase();
-    // PERBAIKAN UTAMA: Paksa semua field menjadi String sebelum toLowerCase()
-    // Gunakan optional chaining atau fallback string kosong ''
-    const matchesSearch = 
-      String(item.Judul_Cover || '').toLowerCase().includes(query) || 
-      String(item.ID || '').toLowerCase().includes(query) ||
-      String(item.Rubrikasi || '').toLowerCase().includes(query) ||
-      String(item.Pj_Editor || '').toLowerCase().includes(query);
+    const matchesSearch = item.judul.toLowerCase().includes(query) || 
+                          item.id.toLowerCase().includes(query) ||
+                          item.rubrikasi.toLowerCase().includes(query);
 
     return matchesMonth && matchesYear && matchesStatus && matchesSearch;
   });
 
+  // 2. Urutkan berdasarkan tanggal rilis (dan jam rilis)
   return results.sort((a, b) => {
-    const dateTimeA = new Date(a.Tanggal_Rilis);
-    const [hA, mA] = a.Jam_Rilis.split(':');
-    dateTimeA.setHours(hA, mA);
+    // Gabungkan tanggal dan jam untuk perbandingan yang presisi
+    const dateTimeA = new Date(a.tanggal);
+    const [hoursA, minsA] = a.jam.split(':');
+    dateTimeA.setHours(hoursA, minsA);
 
-    const dateTimeB = new Date(b.Tanggal_Rilis);
-    const [hB, mB] = b.Jam_Rilis.split(':');
-    dateTimeB.setHours(hB, mB);
+    const dateTimeB = new Date(b.tanggal);
+    const [hoursB, minsB] = b.jam.split(':');
+    dateTimeB.setHours(hoursB, minsB);
 
-    return sortOrder.value === 'asc' ? dateTimeA - dateTimeB : dateTimeB - dateTimeA;
+    if (sortOrder.value === 'asc') {
+      return dateTimeA - dateTimeB; // Terlama ke Terbaru
+    } else {
+      return dateTimeB - dateTimeA; // Terbaru ke Terlama
+    }
   });
 });
 
+// Fungsi toggle sort
 const toggleSort = () => {
   sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-};
-
-// --- 4. Pagination ---
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredData.value.length / itemsPerPage)));
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  return filteredData.value.slice(start, start + itemsPerPage);
-});
-
-// --- 5. Helpers ---
-const formatDateLabel = (date) => {
-  return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-};
-
-const getStatusClass = (status) => {
-  const s = status?.toLowerCase() || '';
-  if (s === 'draft') return 'bg-base-300 text-base-content';
-  if (s === 'on editing') return 'badge-warning text-warning-content';
-  if (s === 'published') return 'badge-info text-info-content';
-  if (s === 'content approved') return 'badge-success text-success-content';
-  return 'badge-ghost';
 };
 
 // Reset ke halaman 1 jika filter berubah
@@ -347,25 +242,34 @@ watch([searchQuery, filterBulan, filterTahun, filterStatus], () => {
   currentPage.value = 1;
 });
 
-// Refresh data jika status login berubah
-watch(() => authStore.isLoggedIn, () => {
-  loadData();
+// --- Pagination ---
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredData.value.length / itemsPerPage)));
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return filteredData.value.slice(start, start + itemsPerPage);
 });
 
-// onMounted(() => {
-//   loadData();
-// });
+// --- Helpers ---
+const formatDateLabel = (date) => {
+  const day = date.getDate();
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
+};
 
-// Update pada logic isLoading agar mempertimbangkan store metadata
-const isPageLoading = computed(() => {
-  return isLoading.value || statusStore.isLoading;
-});
+const getStatusClass = (status) => {
+  const s = status.toLowerCase();
+  // Menggunakan utility class daisyUI yang lebih adaptif
+  if (s === 'draft') return 'bg-base-300 text-base-content';
+  if (s === 'ready to edit') return 'badge-warning text-warning-content';
+  if (s === 'published') return 'badge-info text-info-content';
+  return 'badge-ghost';
+};
 
-onMounted(async () => {
-  // Pastikan metadata sudah terambil sebelum menjalankan loadData
-  if (!statusStore.isLoaded) {
-    await statusStore.fetchSettings();
-  }
-  await loadData();
-});
+onMounted(() => setTimeout(() => isLoading.value = false, 1000));
 </script>
+
+<style scoped>
+.fade-enter-active, .fade-leave-active { transition: all 0.2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-5px); }
+</style>

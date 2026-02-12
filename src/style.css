@@ -2,3 +2,20 @@
 @plugin "daisyui"{
   themes: all;
 }
+
+/* SAFELIST UNTUK STATUS DARI DATABASE 
+  Tailwind v4 akan memindai komentar ini dan menyertakan class-nya ke dalam build.
+*/
+@utility dynamic-status-classes {
+  /* Badge Classes */
+  @apply badge-ghost badge-error badge-primary badge-secondary badge-warning badge-accent badge-success badge-info badge-neutral;
+  
+  /* Background & Opacity Classes */
+  @apply bg-base-300 bg-error/10 bg-primary/10 bg-secondary/10 bg-warning/10 bg-accent/10 bg-success/10 bg-info/10 bg-neutral/10;
+  
+  /* Approval/Soft States */
+  @apply bg-warning/20 bg-warning/5 bg-warning/60 bg-error/20 bg-error/5 bg-error/60;
+  
+  /* Content Colors */
+  @apply text-warning-content text-error-content border-warning/30 border-error/30;
+}
