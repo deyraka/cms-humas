@@ -53,6 +53,12 @@ const router = createRouter({
       meta: { requiresAuth: true, roles: ['superadmin', 'konseptor', 'editor', 'statmin', 'kamedsos'] }
     },
     {
+      path: '/contentForm',
+      name: 'contentForm',
+      component: () => import('../views/ContentForm.vue'),
+      // meta: { requiresAuth: true, roles: ['superadmin', 'konseptor'] }
+    },
+    {
       path: '/users',
       name: 'users',
       component: () => import('../views/UsersView.vue'),

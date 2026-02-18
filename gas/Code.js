@@ -26,6 +26,69 @@ function getAppVersion() {
 function saveContentPlan(formData) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Content_Plan');
+  const fullData = sheet.getDataRange().getValues();
+  const headers = fullData[0];
+  
+  const colMap = {};
+  headers.forEach((h, i) => colMap[h] = i);
+  
+  const idColIndex = colMap['ID'];
+  const idIndexMap = {};
+  for (let i = 1; i < fullData.length; i++) {
+    const rowId = fullData[i][idColIndex];
+    if (rowId) idIndexMap[rowId] = i + 1;
+  }
+
+  // --- LOGIKA UPDATE VS CREATE ---
+  
+  if (formData.ID && idIndexMap[formData.ID]) {
+    // SKENARIO 1: UPDATE PARSIAL
+    const rowIndex = idIndexMap[formData.ID];
+    // Ambil data lama di baris tersebut agar data kolom lain tidak hilang
+    const existingRowData = fullData[rowIndex - 1]; 
+    
+    // Hanya timpa kolom yang ada di dalam formData
+    Object.keys(formData).forEach(key => {
+      if (colMap.hasOwnProperty(key)) {
+        existingRowData[colMap[key]] = formData[key];
+      }
+    });
+
+    sheet.getRange(rowIndex, 1, 1, existingRowData.length).setValues([existingRowData]);
+    return { success: true, message: "Kolom spesifik ID " + formData.ID + " berhasil diupdate" };
+
+  } else {
+    // SKENARIO 2: CREATE BARU
+    // Gunakan array kosong karena ini data baru
+    const rowData = new Array(headers.length).fill("");
+    
+    Object.keys(formData).forEach(key => {
+      if (colMap.hasOwnProperty(key)) {
+        rowData[colMap[key]] = formData[key];
+      }
+    });
+
+    const newId = generateCustomID();
+    rowData[idColIndex] = newId;
+    sheet.appendRow(rowData);
+    return { success: true, message: "Data baru tersimpan dengan ID: " + newId };
+  }
+}
+
+function generateCustomID() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let randomPart = '';
+  for (let i = 0; i < 5; i++) {
+    randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const now = new Date();
+  const mm = ("0" + (now.getMonth() + 1)).slice(-2);
+  const yy = now.getFullYear().toString().slice(-2);
+  return `${randomPart}.${mm}${yy}`;
+}
+/* function saveContentPlan(formData) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Content_Plan');
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
   
@@ -67,42 +130,8 @@ function saveContentPlan(formData) {
     sheet.appendRow(rowData);
     return { success: true, message: "Draft baru berhasil disimpan" };
   }
-}
+} */
 
-/**
- * Mengambil data dari Google Sheet 'Content_Plan'
- * URL Database: https://docs.google.com/spreadsheets/d/1B2tyfau0H71XjkZoc3t9Af5zCImr2SRug4CcklhkkaM/edit
- */
-// function getContentPlanData() {
-//   const ss = SpreadsheetApp.getActiveSpreadsheet();
-//   const sheet = ss.getSheetByName('Content_Plan');
-//   if (!sheet) return [];
-  
-//   const data = sheet.getDataRange().getValues();
-//   if (data.length < 2) return [];
-  
-//   const headers = data[0].map(h => h.toString().trim());
-//   const rows = data.slice(1);
-  
-//   return rows.map((row, index) => {
-//     let obj = { id: index };
-//     headers.forEach((header, i) => {
-//       let value = row[i];
-      
-//       // Handle formatting Date & Time dari Sheet
-//       if (value instanceof Date) {
-//         if (header.toLowerCase().includes('jam')) {
-//           obj[header] = Utilities.formatDate(value, Session.getScriptTimeZone(), "HH:mm");
-//         } else {
-//           obj[header] = Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd");
-//         }
-//       } else {
-//         obj[header] = value;
-//       }
-//     });
-//     return obj;
-//   });
-// }
 function getContentPlanData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Content_Plan');
@@ -205,4 +234,50 @@ function getStatusSettings() {
     console.error("Error in getStatusSettings:", error.message);
     return JSON.stringify({ error: error.message });
   }
+}
+
+/**
+ * Fungsi General untuk mengambil metadata dari sheet apa pun secara dinamis
+ * @param {string} sheetName Nama sheet metadata (Metadata_Rubrikasi, dll)
+ * @return {Array} Array of Objects
+ */
+function getMetadata(sheetName) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(sheetName);
+    if (!sheet) return [];
+
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+    const results = [];
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const obj = {};
+      headers.forEach((header, index) => {
+        obj[header] = row[index];
+      });
+      // Pastikan baris tidak kosong (cek kolom pertama)
+      if (obj[headers[0]] !== "") {
+        results.push(obj);
+      }
+    }
+    return results;
+  } catch (e) {
+    console.error("Error getMetadata " + sheetName + ": " + e.message);
+    return [];
+  }
+}
+
+/**
+ * Fungsi pembungkus (wrapper) untuk memanggil semua metadata sekaligus 
+ * agar proses loading di Vue lebih cepat (hanya 1x request ke GAS)
+ */
+function getAllMetadata() {
+  return {
+    rubrikasi: getMetadata('Metadata_Rubrikasi'),
+    pilar: getMetadata('Metadata_Pilar'),
+    jenisMedia: getMetadata('Metadata_Jenis_Media'),
+    status: getMetadata('Metadata_Status') // Jika ingin sekalian refresh status
+  };
 }

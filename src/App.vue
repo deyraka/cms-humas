@@ -29,14 +29,24 @@ import Breadcrumb from './components/layout/Breadcrumb.vue';
 import Navbar from './components/layout/Navbar.vue';
 import Sidebar from './components/layout/Sidebar.vue';
 import Footer from './components/layout/Footer.vue';
+import { useMetadataStore } from '@/stores/metadata';
 import { useMetadataStatusStore } from '@/stores/metadataStatus';
 import { onMounted } from 'vue';
 
+const metadataStore = useMetadataStore();
 const statusStore = useMetadataStatusStore();
 
-onMounted(() => {
-  // Load semua metadata status di awal aplikasi
-  statusStore.fetchSettings();
+// onMounted(() => {
+//   // Load semua metadata status di awal aplikasi
+//   statusStore.fetchSettings();
+//   metadataStore.fetchAllMetadata()
+// });
+onMounted(async () => {
+  // Panggil secara paralel agar cepat
+  await Promise.all([
+    statusStore.fetchSettings(),
+    metadataStore.fetchAllMetadata()
+  ]);
 });
 </script>
 

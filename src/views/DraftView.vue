@@ -3,7 +3,7 @@
     
     <div class="flex justify-between items-center mb-3 px-1 md:px-0">
       <h1 class="text-xl md:text-2xl font-bold tracking-tight">Contents Draft</h1>
-      <button class="btn btn-primary btn-sm">
+      <button class="btn btn-primary btn-sm" @click="goToCreate">
         <Plus :size="18" />
         <span class="hidden md:inline ml-1">Tambah konten baru</span>
       </button>
@@ -133,7 +133,7 @@
                   </div>
                 </td>
                 <td class="text-center px-1 md:px-4 bg-base-100">
-                  <button class="btn btn-ghost btn-xs btn-square text-info">
+                  <button class="btn btn-ghost btn-xs btn-square text-info" @click="goToEdit(item)">
                     <Pencil :size="15" />
                   </button>
                 </td>
@@ -170,10 +170,13 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { Plus, Search, Filter, Pencil, SearchX, ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-vue-next';
 import { useAuthStore } from '@/stores'; // Impor store untuk integrasi auth
 import { useMetadataStatusStore } from '@/stores/metadataStatus';
+import { useContentStore } from '@/stores/content';
+import { useRouter } from 'vue-router';
 
 // --- State ---
 const authStore = useAuthStore();
 const statusStore = useMetadataStatusStore(); 
+const contentStore = useContentStore(); // Store untuk data konten, bisa digunakan untuk fetch/update data
 const isLoading = ref(true);
 const showExtraFilter = ref(false);
 const searchQuery = ref('');
@@ -181,6 +184,7 @@ const currentPage = ref(1);
 const itemsPerPage = 10;
 const sortOrder = ref('asc'); // Default terlama ke terbaru untuk list draft
 const contentData = ref([]); // State utama untuk menampung data dari backend
+const router = useRouter();
 
 const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 const statusOptions = ['Draft', 'On Editing', 'Published', 'Content Approved', 'Archived'];
@@ -205,6 +209,7 @@ const loadData = async () => {
           Tanggal_Rilis: new Date(item.Tanggal_Rilis)
         }));
         isLoading.value = false;
+        contentStore.setItems(contentData);
       })
       .withFailureHandler((error) => {
         console.error("GAS Error (Draft):", error);
@@ -368,4 +373,21 @@ onMounted(async () => {
   }
   await loadData();
 });
+
+const goToCreate = () => {
+  router.push({ name: 'contentForm' }); 
+  // URL: /contentForm
+};
+
+const goToEdit = (item) => {
+  router.push({ 
+    name: 'contentForm', 
+    query: { 
+      id: item.ID,
+      // Kita bisa selipkan data lain di query, tapi disarankan 
+      // ambil dari store berdasarkan ID saat di ContentForm
+    } 
+  });
+  // URL: /contentForm?id=ABCD.0226
+};
 </script>

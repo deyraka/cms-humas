@@ -130,6 +130,7 @@ import { Plus, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { useAuthStore } from '@/stores';
 import { useMetadataStatusStore } from '@/stores/metadataStatus'; // Import
 import ContentModal from '../components/ContentModal.vue';
+import { useRouter } from 'vue-router';
 
 // --- Pinia & State ---
 const authStore = useAuthStore();
@@ -137,6 +138,7 @@ const statusStore = useMetadataStatusStore(); // Inisialisasi
 const isLoading = ref(true);
 const contentData = ref([]); 
 const selectedContent = ref(null);
+const router = useRouter();
 
 // Safety Loading
 const isPageLoading = computed(() => isLoading.value || statusStore.isLoading);
@@ -284,18 +286,38 @@ function syncSelectors() {
 
 function goToday() { currentDate.value = new Date(); syncSelectors(); }
 
+// function addItem(date) {
+//   /* const title = prompt("Masukkan Judul Konten:");
+//   if (title) {
+//     contentData.value.push({
+//       ID: `CONT-${Date.now()}`,
+//       Tanggal_Rilis: date.toISOString(),
+//       Jam_Rilis: '12:00',
+//       Status: 'Draft',
+//       Rubrikasi: 'General',
+//       Judul_Cover: title
+//     });
+//   } */
+//  const addFromCalendar = (date) => {
+//     router.push({ 
+//       name: 'contentForm', 
+//       query: { date: date } 
+//     });
+//     // URL: /contentForm?date=2026-02-16
+//   };
+// }
 function addItem(date) {
-  const title = prompt("Masukkan Judul Konten:");
-  if (title) {
-    contentData.value.push({
-      ID: `CONT-${Date.now()}`,
-      Tanggal_Rilis: date.toISOString(),
-      Jam_Rilis: '12:00',
-      Status: 'Draft',
-      Rubrikasi: 'General',
-      Judul_Cover: title
-    });
-  }
+  // Ambil tahun, bulan, dan tanggal dari waktu lokal user
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Bulan dimulai dari 0
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  const formattedDate = `${year}-${month}-${day}`;
+
+  router.push({ 
+    name: 'contentForm', 
+    query: { date: formattedDate } 
+  });
 }
 
 // --- Watchers & Lifecycle ---
