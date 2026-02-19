@@ -17,6 +17,14 @@ export const useContentStore = defineStore('content', {
     // Fungsi sakti untuk mencari satu konten berdasarkan ID
     getContentById(id) {
       return this.items.find(item => item.ID === id);
+    },
+
+    updateContentLocally(updatedItem) {
+      const index = this.items.findIndex(item => item.ID === updatedItem.ID);
+      if (index !== -1) {
+        // Gunakan spread operator agar reaktivitas Vue terpicu sempurna
+        this.items[index] = { ...this.items[index], ...updatedItem };
+      }
     }
   }
 });

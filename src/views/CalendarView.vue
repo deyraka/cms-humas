@@ -131,6 +131,8 @@ import { useAuthStore } from '@/stores';
 import { useMetadataStatusStore } from '@/stores/metadataStatus'; // Import
 import ContentModal from '../components/ContentModal.vue';
 import { useRouter } from 'vue-router';
+import { useContentStore } from '@/stores/content';
+
 
 // --- Pinia & State ---
 const authStore = useAuthStore();
@@ -139,6 +141,8 @@ const isLoading = ref(true);
 const contentData = ref([]); 
 const selectedContent = ref(null);
 const router = useRouter();
+const contentStore = useContentStore(); // Store untuk data konten, bisa digunakan untuk fetch/update data
+
 
 // Safety Loading
 const isPageLoading = computed(() => isLoading.value || statusStore.isLoading);
@@ -162,6 +166,7 @@ const loadData = async () => {
       .withSuccessHandler((data) => {
         contentData.value = typeof data === 'string' ? JSON.parse(data) : data;
         isLoading.value = false;
+        contentStore.setItems(contentData);
       })
       .withFailureHandler((error) => {
         console.error("GAS Error:", error);
@@ -175,8 +180,9 @@ const loadData = async () => {
   try {
     await new Promise(r => setTimeout(r, 1000));
     contentData.value = [
-      { ID: "D1", Tanggal_Rilis: new Date().toISOString(), Jam_Rilis: '09:00', Status: 'published', Rubrikasi: 'News', Judul_Cover: 'AI Implementasi' },
-      { ID: "D2", Tanggal_Rilis: new Date().toISOString(), Jam_Rilis: '14:30', Status: 'on editing', Rubrikasi: 'Social', Judul_Cover: 'Edukasi BPS' }
+      { ID: "D1", Tanggal_Rilis: new Date().toISOString(), Jam_Rilis: '09:00', Status: 'published', Rubrikasi: 'News', Judul_Cover: 'AI Implementasi' , Catatan_Approval: '(superadmin) disetujui dengan catatan...'},
+      { ID: "D2", Tanggal_Rilis: new Date().toISOString(), Jam_Rilis: '14:30', Status: 'on editing', Rubrikasi: 'Social', Judul_Cover: 'Edukasi BPS', Catatan_Approval: '(konseptor) perlu revisi pada bagian data...'},
+      { ID: "D3", Tanggal_Rilis: new Date().toISOString(), Jam_Rilis: '16:00', Status: 'draft', Rubrikasi: 'General', Judul_Cover: 'Konten Hiburan' }
     ];
   } finally {
     isLoading.value = false;

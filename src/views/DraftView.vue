@@ -16,7 +16,7 @@
           <input 
             type="text" 
             v-model="searchQuery" 
-            placeholder="Cari ID, Rubrikasi, atau judul..." 
+            placeholder="Cari ID, Rubrikasi, Judul, atau Editor..." 
             class="input input-bordered input-sm md:input-md w-full pl-9 bg-base-100"
           />
         </div>
@@ -71,6 +71,7 @@
                   <component :is="sortOrder === 'asc' ? ArrowUpNarrowWide : ArrowDownWideNarrow" :size="14" />
                 </div>
               </th>
+              <th class="hidden md:table-cell px-4 border-b border-base-content/10">Editor</th>
               <th class="px-2 border-b border-base-content/10">Status</th>
               <th class="text-center px-2 border-b border-base-content/10 font-bold">Aksi</th>
             </tr>
@@ -79,7 +80,7 @@
           <tbody class="divide-y divide-base-300">
             <template v-if="isPageLoading">
               <tr v-for="i in 5" :key="i">
-                <td colspan="5" class="p-4 bg-base-100">
+                <td colspan="6" class="p-4 bg-base-100">
                   <div class="skeleton h-10 w-full rounded-md opacity-50"></div>
                 </td>
               </tr>
@@ -109,8 +110,14 @@
                     <span class="text-sm font-bold leading-snug truncate">
                       {{ item.Judul_Cover }}
                     </span>
+                    <span v-if="item.is_Rescheduled" class="text-[9px] font-bold text-error flex items-center gap-1 mt-0.5 uppercase">
+                      <AlertCircle :size="10" /> Rescheduled Content
+                    </span>
                     <span class="md:hidden text-[10px] text-base-content/50 font-medium mt-0.5">
                       {{ formatDateLabel(item.Tanggal_Rilis) }} • {{ item.Jam_Rilis }}
+                    </span>
+                    <span class="md:hidden text-[9px] text-base-content/40 italic">
+                      Editor: {{ item.Pj_Editor || '-' }}
                     </span>
                   </div>
                 </td>
@@ -119,6 +126,9 @@
                     <span class="font-semibold text-base-content/80">{{ formatDateLabel(item.Tanggal_Rilis) }}</span>
                     <span class="text-xs text-base-content/40">{{ item.Jam_Rilis }} WIB</span>
                   </div>
+                </td>
+                <td class="hidden md:table-cell px-4 bg-base-100 border-b border-base-content/5">
+                  <span class="text-xs font-medium text-base-content/70">{{ item.Pj_Editor || '-' }}</span>
                 </td>
                 <td class="px-1 md:px-4 text-center md:text-left bg-base-100">
                   <div :data-tip="item.Status" class="tooltip tooltip-primary md:tooltip-top">
@@ -133,9 +143,21 @@
                   </div>
                 </td>
                 <td class="text-center px-1 md:px-4 bg-base-100">
-                  <button class="btn btn-ghost btn-xs btn-square text-info" @click="goToEdit(item)">
-                    <Pencil :size="15" />
-                  </button>
+                  <div class="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-1">
+                    
+                    <div class="tooltip tooltip-left md:tooltip-top tooltip-info" data-tip="Ubah Detil Konten">
+                      <button class="btn btn-ghost btn-xs btn-square text-info hover:bg-info/10" @click="goToEdit(item)">
+                        <FilePenLine :size="16" />
+                      </button>
+                    </div>
+
+                    <div class="tooltip tooltip-left md:tooltip-top tooltip-warning" data-tip="Update Status Konten">
+                      <button class="btn btn-ghost btn-xs btn-square text-warning hover:bg-warning/10" @click="goToEditStatus(item)">
+                        <UserRoundPen :size="16" />
+                      </button>
+                    </div>
+
+                  </div>
                 </td>
               </tr>
             </template>
@@ -167,7 +189,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { Plus, Search, Filter, Pencil, SearchX, ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-vue-next';
+import { FilePenLine, UserRoundPen, AlertCircle, Plus, Search, Filter, SearchX, ArrowUpNarrowWide, ArrowDownWideNarrow } from 'lucide-vue-next';
 import { useAuthStore } from '@/stores'; // Impor store untuk integrasi auth
 import { useMetadataStatusStore } from '@/stores/metadataStatus';
 import { useContentStore } from '@/stores/content';
@@ -250,10 +272,37 @@ const fetchDummyData = () => {
         Kamedsos_Approval: true,
         Kahumas_Approval: true,
         Kabag_Approval: true,
-        Madya_Approval: true,
-        Kepala_Approval: true,
-        Catatan: 'Segera diposting di semua platform',
-        is_Rescheduled: false
+        Madya_Approval: 0,
+        Madya_Disapproval: 0,
+        Kabps_Approval: true,
+        Catatan_Approval: 'Segera diposting di semua platform',
+        Catatan_Production: '',
+        is_Rescheduled: false,
+        is_Sisipan: false
+      },
+      { 
+        ID: 'CONT-2026-0200',
+        Tanggal_Rilis: new Date(), 
+        Jam_Rilis: '09:00',
+        Pilar: 'Transformasi Digital',
+        Rubrikasi: 'News',
+        Jenis_Media: 'Instagram',
+        Ide_Konten: 'Pemanfaatan Gemini dalam kehumasan BPS',
+        Referensi: 'https://example.com',
+        Judul_Cover: 'Implementasi Gemini dalam urusan Perkantoran',
+        Link_Hasil: 'https://kalteng.go.id',
+        Pj_Editor: 'Abidin',
+        Status: 'waiting approval',
+        Kamedsos_Approval: true,
+        Kahumas_Approval: true,
+        Kabag_Approval: true,
+        Madya_Approval: 0,
+        Madya_Disapproval: 0,
+        Kabps_Approval: true,
+        Catatan_Approval: 'Segera diposting di semua platform',
+        Catatan_Production: '',
+        is_Rescheduled: false,
+        is_Sisipan: false
       },
       // Loop untuk generate data tambahan
       ...Array.from({ length: 15 }, (_, i) => ({
@@ -272,10 +321,13 @@ const fetchDummyData = () => {
         Kamedsos_Approval: false,
         Kahumas_Approval: false,
         Kabag_Approval: false,
-        Madya_Approval: false,
-        Kepala_Approval: false,
-        Catatan: '',
-        is_Rescheduled: i % 5 === 0
+        Madya_Approval: 0,
+        Madya_Disapproval: 0,
+        Kabps_Approval: false,
+        Catatan_Approval: '',
+        Catatan_Production: '',
+        is_Rescheduled: i % 5 === 0,
+        is_Sisipan: false
       }))
     ];
     setTimeout(() => resolve(fullSchemaData), 1000);
@@ -382,6 +434,18 @@ const goToCreate = () => {
 const goToEdit = (item) => {
   router.push({ 
     name: 'contentForm', 
+    query: { 
+      id: item.ID,
+      // Kita bisa selipkan data lain di query, tapi disarankan 
+      // ambil dari store berdasarkan ID saat di ContentForm
+    } 
+  });
+  // URL: /contentForm?id=ABCD.0226
+};
+
+const goToEditStatus = (item) => {
+  router.push({ 
+    name: 'editStatusForm', 
     query: { 
       id: item.ID,
       // Kita bisa selipkan data lain di query, tapi disarankan 

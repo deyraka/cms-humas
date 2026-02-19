@@ -59,6 +59,12 @@ const router = createRouter({
       // meta: { requiresAuth: true, roles: ['superadmin', 'konseptor'] }
     },
     {
+      path: '/editStatusForm',
+      name: 'editStatusForm',
+      component: () => import('../views/EditStatusForm.vue'),
+      // meta: { requiresAuth: true, roles: ['superadmin', 'konseptor'] }
+    },
+    {
       path: '/users',
       name: 'users',
       component: () => import('../views/UsersView.vue'),

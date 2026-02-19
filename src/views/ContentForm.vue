@@ -10,7 +10,7 @@
           <h1 class="text-lg sm:text-2xl font-bold text-base-content flex items-center gap-2">
             {{ isEditMode ? 'Edit' : 'Input' }} Konten
             <span class="badge badge-primary badge-outline text-[10px] sm:text-xs gap-1 px-1 h-5">
-              <Sparkles class="w-2 h-2 sm:w-3 sm:h-3" /> AI
+              <Sparkles class="w-2 h-2 sm:w-3 sm:h-3" /> AI powered
             </span>
           </h1>
           <p class="text-[10px] sm:text-sm text-base-content/60">Lengkapi detail konten produksi di bawah ini.</p>
@@ -37,14 +37,14 @@
               <label class="label pt-0 pb-1">
                 <span class="label-text text-[10px] uppercase font-bold text-base-content/50">Tanggal</span>
               </label>
-              <input type="date" v-model="formData.Tanggal_Rilis" class="input input-bordered input-sm sm:input-md w-full focus:input-primary text-xs" required />
+              <input type="date" v-model="formData.Tanggal_Rilis" class="input input-bordered input-sm sm:input-md w-full focus:input-primary text-xs rounded-lg" required />
             </div>
 
             <div class="form-control col-span-4 md:col-span-4">
               <label class="label pt-0 pb-1">
                 <span class="label-text text-[10px] uppercase font-bold text-base-content/50">Jam</span>
               </label>
-              <input type="time" v-model="formData.Jam_Rilis" class="input input-bordered input-sm sm:input-md w-full focus:input-primary text-xs px-1" required />
+              <input type="time" v-model="formData.Jam_Rilis" class="input input-bordered input-sm sm:input-md w-full focus:input-primary text-xs px-1 rounded-lg" required />
             </div>
           </div>
 
@@ -55,7 +55,7 @@
               <label class="label pt-0 pb-1">
                 <span class="label-text text-[10px] uppercase font-bold text-base-content/50">Pilar</span>
               </label>
-              <select v-model="formData.Pilar" class="select select-bordered select-sm sm:select-md w-full focus:select-primary font-normal text-xs" required>
+              <select v-model="formData.Pilar" class="select select-bordered select-sm sm:select-md w-full focus:select-primary font-normal text-xs rounded-lg" required>
                 <option value="">Pilih Pilar</option>
                 <option v-for="opt in metaStore.pilarOptions" :key="opt" :value="opt">{{ opt }}</option>
               </select>
@@ -65,7 +65,7 @@
               <label class="label pt-0 pb-1">
                 <span class="label-text text-[10px] uppercase font-bold text-base-content/50">Rubrikasi</span>
               </label>
-              <select v-model="formData.Rubrikasi" class="select select-bordered select-sm sm:select-md w-full focus:select-primary font-normal text-xs" required>
+              <select v-model="formData.Rubrikasi" class="select select-bordered select-sm sm:select-md w-full focus:select-primary font-normal text-xs rounded-lg" required>
                 <option value="">Pilih Rubrik</option>
                 <option v-for="opt in metaStore.rubrikOptions" :key="opt" :value="opt">{{ opt }}</option>
               </select>
@@ -75,7 +75,7 @@
               <label class="label pt-0 pb-1">
                 <span class="label-text text-[10px] uppercase font-bold text-base-content/50">Media</span>
               </label>
-              <select v-model="formData.Jenis_Media" class="select select-bordered select-sm sm:select-md w-full focus:select-primary font-normal text-xs" required>
+              <select v-model="formData.Jenis_Media" class="select select-bordered select-sm sm:select-md w-full focus:select-primary font-normal text-xs rounded-lg" required>
                 <option value="">Pilih Media</option>
                 <option v-for="opt in metaStore.mediaOptions" :key="opt" :value="opt">{{ opt }}</option>
               </select>
@@ -100,14 +100,14 @@
                   AI Bantu
                 </button>
               </div>
-              <textarea id="ide" v-model="formData.Ide_Konten" placeholder=" " class="textarea textarea-bordered w-full peer focus:textarea-primary min-h-[100px] pt-8 text-xs sm:text-sm leading-relaxed" required></textarea>
+              <textarea id="ide" v-model="formData.Ide_Konten" placeholder=" " class="textarea textarea-bordered w-full peer focus:textarea-primary min-h-[100px] pt-8 text-xs sm:text-sm leading-relaxed rounded-lg" required></textarea>
               <label for="ide" class="floating-label absolute text-base-content/60 duration-300 transform top-4 left-4 z-10 origin-[0] peer-placeholder-shown:top-4 peer-placeholder-shown:scale-100 peer-focus:top-2 peer-focus:scale-75 peer-focus:text-primary pointer-events-none flex items-center gap-1 text-xs">
                 <Lightbulb class="w-3 h-3" /> Ide Konten
               </label>
             </div>
 
             <div class="relative w-full">
-              <input type="text" id="judul" v-model="formData.Judul_Cover" placeholder=" " class="input input-bordered w-full peer focus:input-primary h-12 sm:h-14 pr-12 text-xs sm:text-sm" required />
+              <input type="text" id="judul" v-model="formData.Judul_Cover" placeholder=" " class="input input-bordered w-full peer focus:input-primary h-12 sm:h-14 pr-12 text-xs sm:text-sm rounded-lg" required />
               <label for="judul" class="floating-label absolute text-base-content/60 duration-300 transform -translate-y-3 scale-75 top-4 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-primary pointer-events-none text-xs">
                 <Type class="w-3 h-3 inline mr-1" /> Judul Cover
               </label>
@@ -115,13 +115,13 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="relative w-full">
-                <input type="url" id="ref" v-model="formData.Referensi" placeholder=" " class="input input-bordered w-full peer focus:input-primary h-12 sm:h-14 text-xs" />
+                <input type="url" id="ref" v-model="formData.Referensi" placeholder=" " class="input input-bordered w-full peer focus:input-primary h-12 sm:h-14 text-xs rounded-lg" />
                 <label for="ref" class="floating-label absolute text-base-content/60 duration-300 transform top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-primary pointer-events-none text-xs">
                   <Link2 class="w-3 h-3 inline mr-1" /> Link Ref
                 </label>
               </div>
               <div class="relative w-full">
-                <input type="url" id="hasil" v-model="formData.Link_Hasil" placeholder=" " class="input input-bordered w-full peer focus:input-primary h-12 sm:h-14 text-xs" />
+                <input type="url" id="hasil" v-model="formData.Link_Hasil" placeholder=" " class="input input-bordered w-full peer focus:input-primary h-12 sm:h-14 text-xs rounded-lg" />
                 <label for="hasil" class="floating-label absolute text-base-content/60 duration-300 transform top-4 left-4 z-10 origin-[0] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-3 peer-focus:text-primary pointer-events-none text-xs">
                   <ExternalLink class="w-3 h-3 inline mr-1" /> Link Hasil
                 </label>
@@ -132,7 +132,7 @@
           <div class="bg-base-200/50 rounded-xl p-3 sm:p-5 border border-base-200">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="md:col-span-2">
-                <textarea v-model="formData.Catatan_Production" class="textarea textarea-bordered w-full focus:textarea-warning min-h-[60px] text-xs leading-relaxed" placeholder="Catatan produksi (talent, lokasi, dll)..."></textarea>
+                <textarea v-model="formData.Catatan_Production" class="textarea textarea-bordered w-full focus:textarea-warning min-h-[60px] text-xs leading-relaxed rounded-lg" placeholder="Catatan produksi (talent, lokasi, dll)..."></textarea>
               </div>
 
               <div class="grid grid-cols-2 gap-3 md:col-span-1">
@@ -161,7 +161,7 @@
                 <label class="label pt-0 pb-1">
                   <span class="label-text text-[10px] uppercase font-bold text-base-content/50">Status Konten</span>
                 </label>
-                <select v-model="formData.Status" class="select select-bordered select-sm w-full text-xs font-normal">
+                <select v-model="formData.Status" class="select select-bordered select-sm w-full text-xs font-normal rounded-lg">
                   <option v-for="opt in statusStore.options" :key="opt" :value="opt">{{ opt }}</option>
                 </select>
               </div>
